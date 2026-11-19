@@ -80,7 +80,6 @@
       <dl>
         <dt>요구 경력·자격</dt><dd>{{ j.career }} · {{ j.requirements }}</dd>
         <dt>맞는 역량</dt><dd>{{ j.matches | join(" / ") }}</dd>
-        <dt>부족한 점</dt><dd>{{ j.gaps | join(" / ") }}</dd>
         <dt>우선순위</dt><dd>{{ j.priority }}순위 · {{ j.priority_reason }}</dd>
         <dt>원문</dt><dd><a href="{{ j.url }}">{{ j.url }}</a></dd>
       </dl>
@@ -98,9 +97,7 @@
         <dt>먼저 지원할 이유</dt><dd>{{ t.why_first }}</dd>
         <dt>이력서 강조점</dt><dd>{{ t.resume_focus }}</dd>
         <dt>포트폴리오</dt><dd>{{ t.portfolio }}</dd>
-        <dt>보완할 점</dt><dd>{{ t.improve | join(" / ") }}</dd>
       </dl>
-      <div class="quote">{{ t.intro_sentence }}</div>
     </div>
     {% endfor %}
   </section>
