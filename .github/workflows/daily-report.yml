@@ -1,0 +1,46 @@
+name: Daily Job Report
+
+on:
+  schedule:
+    - cron: "52 23 * * *"   # 매일 08:52 KST (UTC 기준 전날 23:52)
+  workflow_dispatch:         # Actions 탭에서 수동 실행
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate report
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PROFILE: ${{ secrets.PROFILE }}
+        run: python scripts/generate_report.py
+
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs data
+          if git diff --cached --quiet; then
+            echo "변경 사항 없음"
+          else
+            git commit -m "report: $(TZ=Asia/Seoul date +%F)"
+            git push
+          fi

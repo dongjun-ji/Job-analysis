@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>데일리 채용 브리프 · {{ date_label }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+{% include "_style.html" %}
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">DAILY JOB BRIEF</div>
+    <h1>데일리 채용 브리프</h1>
+    <div class="meta">{{ date_label }} · 검색 기준 최근 7일 공고</div>
+  </header>
+
+  <div class="summary">
+    <h2>오늘의 채용 브리핑</h2>
+    <ul>
+      {% for line in r.briefing %}<li>{{ line }}</li>{% endfor %}
+      {% if not history_checked %}<li>이전 추천 내역을 확인할 수 없어 중복 여부는 확인하지 못했어요.</li>{% endif %}
+    </ul>
+    <div class="kpis">
+      <div class="kpi"><b>{{ r.kpis.new_count }}</b><span>새로 찾은 적합 공고</span></div>
+      <div class="kpi"><b>{{ r.kpis.top_score }}</b><span>최고 적합도</span></div>
+      <div class="kpi"><b>{{ r.kpis.nearest_deadline }}</b><span>가장 가까운 마감</span></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="badge">TABLE</span><h2>채용공고 비교표</h2></div>
+    {% if r.jobs %}
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>기업명</th><th>직무</th><th>경력 요건</th><th>적합도</th><th>마감일</th><th>우선순위</th><th>링크</th></tr></thead>
+        <tbody>
+        {% for j in r.jobs %}
+          <tr>
+            <td>{{ j.company }}{% if j.is_repeat %} <span class="tag re">재추천</span>{% endif %}{% if j.d_day is not none %} <span class="tag urgent">D-{{ j.d_day }}</span>{% endif %}</td>
+            <td>{{ j.title }}</td>
+            <td>{{ j.career }}</td>
+            <td><span class="score {{ j.score_class }}">{{ j.total }}</span></td>
+            <td>{{ j.deadline_text }}</td>
+            <td>{{ j.priority }}</td>
+            <td><a href="{{ j.url }}">원문</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="note">오늘은 조건에 맞는 공고를 찾지 못했어요.</p>
+    {% endif %}
+    <p class="note">적합도 = 직무 경험 40 + 필수 자격 30 + 산업·도메인 20 + 근무 조건 10. 70점 이상 초록, 55~69 노랑, 그 아래 회색.</p>
+  </section>
+
+  {% if r.common_skills %}
+  <section>
+    <div class="sec-head"><span class="badge">TREND</span><h2>공통 요구 역량</h2></div>
+    <p>{{ r.common_skills }}</p>
+  </section>
+  {% endif %}
+
+  <section>
+    <div class="sec-head"><span class="badge">DETAIL</span><h2>공고별 상세 분석</h2></div>
+    {% for j in r.jobs %}
+    <div class="card">
+      <h3>{{ j.company }} · {{ j.title }}</h3>
+      <div class="sub">{{ j.location }} · {{ j.employment }} · 등록 {{ j.posted }} / 마감 {{ j.deadline_text }}</div>
+      <div class="bars">
+        <div><b>{{ j.scores.experience }}/40</b>직무 경험</div>
+        <div><b>{{ j.scores.qualification }}/30</b>필수 자격</div>
+        <div><b>{{ j.scores.domain }}/20</b>도메인</div>
+        <div><b>{{ j.scores.conditions }}/10</b>근무 조건</div>
+      </div>
+      <dl>
+        <dt>요구 경력·자격</dt><dd>{{ j.career }} · {{ j.requirements }}</dd>
+        <dt>맞는 역량</dt><dd>{{ j.matches | join(" / ") }}</dd>
+        <dt>부족한 점</dt><dd>{{ j.gaps | join(" / ") }}</dd>
+        <dt>우선순위</dt><dd>{{ j.priority }}순위 · {{ j.priority_reason }}</dd>
+        <dt>원문</dt><dd><a href="{{ j.url }}">{{ j.url }}</a></dd>
+      </dl>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% if r.top3 %}
+  <section class="top">
+    <div class="sec-head"><span class="badge">TOP 3</span><h2>오늘의 추천 TOP 3</h2></div>
+    {% for t in r.top3 %}
+    <div class="card">
+      <h3><span class="rank">{{ loop.index }}</span>{{ t.company }} · {{ t.title }}</h3>
+      <dl>
+        <dt>먼저 지원할 이유</dt><dd>{{ t.why_first }}</dd>
+        <dt>이력서 강조점</dt><dd>{{ t.resume_focus }}</dd>
+        <dt>포트폴리오</dt><dd>{{ t.portfolio }}</dd>
+        <dt>보완할 점</dt><dd>{{ t.improve | join(" / ") }}</dd>
+      </dl>
+      <div class="quote">{{ t.intro_sentence }}</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section>
+    <div class="sec-head"><span class="badge">TODO</span><h2>오늘 해야 할 액션 3가지</h2></div>
+    <ol class="actions">
+      {% for a in r.actions %}<li>{{ a }}</li>{% endfor %}
+    </ol>
+  </section>
+
+  <div class="verdict">
+    <h2>오늘의 한 줄 결론</h2>
+    <p>{{ r.verdict }}</p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="badge">SOURCE</span><h2>출처</h2></div>
+    <ul class="sources">
+      {% for j in r.jobs %}<li><a href="{{ j.url }}">{{ j.company }} {{ j.title }}</a></li>{% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="badge">OPS</span><h2>운영 지표</h2></div>
+    <p class="note">모델 {{ model }} · 웹 검색 {{ usage.web_search_requests }}회 · 페이지 열람 {{ usage.web_fetch_requests }}회 · 입력 {{ "{:,}".format(usage.input_tokens) }} / 출력 {{ "{:,}".format(usage.output_tokens) }} 토큰 · 추정 비용 ${{ cost }}</p>
+    {% if archive_dates %}
+    <p class="note">지난 리포트:
+      {% for d in archive_dates %}<a href="{{ prefix }}archive/{{ d }}.html">{{ d[5:] }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+  </section>
+
+  <footer>GitHub Actions가 매일 오전 9시 전후 자동으로 만든 페이지예요. 생성 {{ generated_at }} KST</footer>
+</div>
+</body>
+</html>
