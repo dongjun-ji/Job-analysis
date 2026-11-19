@@ -1,14 +1,13 @@
-"""매일 아침 채용공고를 찾아 HTML 리포트를 만드는 스크립트.
+"""data/reports/에 올라온 분석 결과(JSON)로 HTML 리포트를 만드는 스크립트.
 
-흐름: 프롬프트 준비 → Claude API(웹 검색·웹 페이지 열기) → JSON 결과 → HTML 렌더링 → 기록 저장
+공고 검색과 분석은 Claude 예약 작업이 매일 아침 수행해 JSON으로 올리고,
+이 스크립트는 GitHub Actions에서 실행되어 검증 → 계산 → HTML 생성 → 기록 저장을 맡는다.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
-import re
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -17,112 +16,52 @@ from zoneinfo import ZoneInfo
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 ROOT = Path(__file__).resolve().parent.parent
+REPORTS = ROOT / "data" / "reports"
+HISTORY = ROOT / "data" / "history.json"
+DOCS = ROOT / "docs"
 KST = ZoneInfo("Asia/Seoul")
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
-
-MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5-5")
-MAX_SEARCHES = int(os.environ.get("MAX_SEARCHES", "20"))
-MAX_FETCHES = int(os.environ.get("MAX_FETCHES", "20"))
 HISTORY_DAYS = 7
-MAX_CONTINUATIONS = 10
-
-# 비용 추정용 단가 (USD). 모델을 바꾸면 함께 바꾼다.
-PRICE_INPUT_PER_MTOK = float(os.environ.get("PRICE_INPUT", "2"))
-PRICE_OUTPUT_PER_MTOK = float(os.environ.get("PRICE_OUTPUT", "10"))
-PRICE_PER_SEARCH = 0.01
+SCORE_KEYS = {"experience": 40, "qualification": 30, "domain": 20, "conditions": 10}
+REQUIRED_JOB_KEYS = ["company", "title", "url", "scores", "priority"]
 
 
 # ---------- 기록 ----------
 
 def load_history() -> list[dict]:
-    path = ROOT / "data" / "history.json"
-    if not path.exists():
+    if not HISTORY.exists():
         return []
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(HISTORY.read_text(encoding="utf-8"))
 
 
-def save_history(history: list[dict]) -> None:
-    path = ROOT / "data" / "history.json"
-    path.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+def recent_urls(history: list[dict], day: date) -> set[str]:
+    cutoff = day - timedelta(days=HISTORY_DAYS)
+    return {
+        job["url"]
+        for entry in history
+        if cutoff <= date.fromisoformat(entry["date"]) < day
+        for job in entry["jobs"]
+    }
 
 
-def recent_urls(history: list[dict], today: date) -> set[str]:
-    cutoff = today - timedelta(days=HISTORY_DAYS)
-    urls = set()
-    for day in history:
-        if date.fromisoformat(day["date"]) >= cutoff and day["date"] != today.isoformat():
-            urls.update(job["url"] for job in day["jobs"])
-    return urls
+# ---------- 검증과 계산 ----------
 
+def validate(report: dict) -> list[str]:
+    """AI가 만든 데이터에서 형식이 틀린 부분을 찾는다. 문제가 있으면 메시지 목록을 돌려준다."""
+    errors = []
+    for key in ("briefing", "jobs", "actions", "verdict"):
+        if key not in report:
+            errors.append(f"'{key}' 항목이 없습니다")
+    for i, job in enumerate(report.get("jobs", []), 1):
+        for key in REQUIRED_JOB_KEYS:
+            if not job.get(key):
+                errors.append(f"{i}번째 공고에 '{key}'가 없습니다")
+        for key, limit in SCORE_KEYS.items():
+            value = job.get("scores", {}).get(key)
+            if not isinstance(value, (int, float)) or not 0 <= value <= limit:
+                errors.append(f"{i}번째 공고 {key} 점수가 0~{limit} 범위를 벗어났습니다: {value}")
+    return errors
 
-def history_text(history: list[dict], today: date) -> str:
-    cutoff = today - timedelta(days=HISTORY_DAYS)
-    lines = []
-    for day in history:
-        if date.fromisoformat(day["date"]) >= cutoff and day["date"] != today.isoformat():
-            for job in day["jobs"]:
-                lines.append(f"- {day['date']} | {job['company']} | {job['title']} | {job['url']}")
-    return "\n".join(lines) or "(없음)"
-
-
-# ---------- Claude 호출 ----------
-
-def build_prompt(today: date, history: list[dict]) -> str:
-    profile = os.environ.get("PROFILE") or (ROOT / "config" / "profile.md").read_text(encoding="utf-8")
-    template = (ROOT / "config" / "prompt.md").read_text(encoding="utf-8")
-    return (
-        template.replace("{{TODAY}}", today.isoformat())
-        .replace("{{PROFILE}}", profile)
-        .replace("{{HISTORY}}", history_text(history, today))
-    )
-
-
-def call_claude(prompt: str) -> tuple[str, dict]:
-    import anthropic
-
-    client = anthropic.Anthropic()
-    tools = [
-        {
-            "type": "web_search_20260318",
-            "name": "web_search",
-            "max_uses": MAX_SEARCHES,
-            "user_location": {"type": "approximate", "country": "KR", "timezone": "Asia/Seoul"},
-        },
-        {"type": "web_fetch_20260318", "name": "web_fetch", "max_uses": MAX_FETCHES},
-    ]
-    messages = [{"role": "user", "content": prompt}]
-    usage = {"input_tokens": 0, "output_tokens": 0, "web_search_requests": 0, "web_fetch_requests": 0}
-
-    for _ in range(MAX_CONTINUATIONS):
-        response = client.messages.create(
-            model=MODEL, max_tokens=32000, messages=messages, tools=tools
-        )
-        u = response.usage
-        usage["input_tokens"] += (u.input_tokens or 0) + (getattr(u, "cache_read_input_tokens", 0) or 0)
-        usage["output_tokens"] += u.output_tokens or 0
-        stu = getattr(u, "server_tool_use", None)
-        if stu:
-            usage["web_search_requests"] += getattr(stu, "web_search_requests", 0) or 0
-            usage["web_fetch_requests"] += getattr(stu, "web_fetch_requests", 0) or 0
-
-        if response.stop_reason == "pause_turn":
-            # 검색이 길어지면 API가 잠시 멈춘다. 받은 내용을 그대로 돌려보내 이어서 진행한다.
-            messages.append({"role": "assistant", "content": response.content})
-            continue
-
-        text = "".join(block.text for block in response.content if block.type == "text")
-        return text, usage
-
-    raise RuntimeError("Claude 응답이 끝나지 않았습니다 (pause_turn 반복).")
-
-
-def extract_json(text: str) -> dict:
-    blocks = re.findall(r"```json\s*(\{.*?\})\s*```", text, flags=re.S)
-    candidate = blocks[-1] if blocks else text[text.find("{"): text.rfind("}") + 1]
-    return json.loads(candidate)
-
-
-# ---------- 가공 ----------
 
 def score_class(total: int) -> str:
     if total >= 70:
@@ -132,25 +71,28 @@ def score_class(total: int) -> str:
     return "s-low"
 
 
-def enrich(report: dict, today: date, seen_urls: set[str]) -> dict:
-    for job in report.get("jobs", []):
-        s = job.get("scores", {})
-        job["total"] = sum(int(s.get(k, 0) or 0) for k in ("experience", "qualification", "domain", "conditions"))
+def enrich(report: dict, day: date, seen_urls: set[str]) -> dict:
+    """합계, 색 구분, 마감 D-day, 재추천 여부처럼 정답이 있는 계산은 코드가 맡는다."""
+    for job in report["jobs"]:
+        job["total"] = int(sum(job["scores"][k] for k in SCORE_KEYS))
         job["score_class"] = score_class(job["total"])
-        job["is_repeat"] = job.get("url") in seen_urls
+        job["is_repeat"] = job["url"] in seen_urls
         job["d_day"] = None
         iso = job.get("deadline_iso")
         if iso:
             try:
-                days = (date.fromisoformat(iso) - today).days
+                days = (date.fromisoformat(iso) - day).days
                 if 0 <= days <= 7:
                     job["d_day"] = days
             except ValueError:
                 pass
-    report["jobs"] = sorted(report.get("jobs", []), key=lambda j: j.get("priority", 99))
+    report["jobs"].sort(key=lambda j: j.get("priority", 99))
 
     jobs = report["jobs"]
-    deadlines = sorted(j["deadline_iso"] for j in jobs if j.get("deadline_iso"))
+    deadlines = sorted(
+        j["deadline_iso"] for j in jobs
+        if j.get("deadline_iso") and j["deadline_iso"] >= day.isoformat()
+    )
     report["kpis"] = {
         "new_count": sum(1 for j in jobs if not j["is_repeat"]),
         "top_score": max((j["total"] for j in jobs), default="-"),
@@ -159,30 +101,14 @@ def enrich(report: dict, today: date, seen_urls: set[str]) -> dict:
     return report
 
 
-def estimate_cost(usage: dict) -> float:
-    return round(
-        usage["input_tokens"] / 1e6 * PRICE_INPUT_PER_MTOK
-        + usage["output_tokens"] / 1e6 * PRICE_OUTPUT_PER_MTOK
-        + usage["web_search_requests"] * PRICE_PER_SEARCH,
-        3,
-    )
-
-
 # ---------- 렌더링 ----------
 
-def render(report: dict, today: date, usage: dict, history_checked: bool,
-           archive_dates: list[str], prefix: str = "") -> str:
-    env = Environment(
-        loader=FileSystemLoader(ROOT / "templates"),
-        autoescape=select_autoescape(["html"]),
-    )
-    template = env.get_template("report.html")
-    return template.render(
+def render(report: dict, day: date, history_checked: bool, archive_dates: list[str], prefix: str = "") -> str:
+    env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=select_autoescape(["html"]))
+    return env.get_template("report.html").render(
         r=report,
-        date_label=f"{today.year}년 {today.month}월 {today.day}일 ({WEEKDAYS[today.weekday()]})",
-        usage=usage,
-        cost=estimate_cost(usage),
-        model=MODEL,
+        date_label=f"{day.year}년 {day.month}월 {day.day}일 ({WEEKDAYS[day.weekday()]})",
+        ops=report.get("ops", {}),
         history_checked=history_checked,
         archive_dates=archive_dates,
         prefix=prefix,
@@ -190,59 +116,60 @@ def render(report: dict, today: date, usage: dict, history_checked: bool,
     )
 
 
+def latest_report() -> Path | None:
+    files = sorted(REPORTS.glob("*.json"))
+    return files[-1] if files else None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sample", help="API를 부르지 않고 이 JSON 파일로 렌더링만 한다")
+    parser.add_argument("--input", help="렌더링할 JSON 파일 (기본: data/reports/의 가장 최근 파일)")
+    parser.add_argument("--sample", action="store_true", help="예시 데이터로 화면만 확인 (기록·아카이브 저장 안 함)")
     args = parser.parse_args()
 
-    today = datetime.now(KST).date()
-    history = load_history()
-    seen = recent_urls(history, today)
-
     if args.sample:
-        report = json.loads(Path(args.sample).read_text(encoding="utf-8"))
-        usage = {"input_tokens": 0, "output_tokens": 0, "web_search_requests": 0, "web_fetch_requests": 0}
+        path = ROOT / "data" / "sample_report.json"
+        day = datetime.now(KST).date()
     else:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY가 없습니다.", file=sys.stderr)
-            return 1
-        text, usage = call_claude(build_prompt(today, history))
-        try:
-            report = extract_json(text)
-        except (json.JSONDecodeError, ValueError):
-            print("JSON을 읽지 못했습니다. 응답 원문:\n" + text, file=sys.stderr)
-            return 1
+        path = Path(args.input) if args.input else latest_report()
+        if not path or not path.exists():
+            print("data/reports/에 리포트 JSON이 아직 없습니다. 건너뜁니다.")
+            return 0
+        day = date.fromisoformat(path.stem)
 
-    report = enrich(report, today, seen)
+    report = json.loads(path.read_text(encoding="utf-8"))
+    errors = validate(report)
+    if errors:
+        print("리포트 데이터 형식 오류:\n- " + "\n- ".join(errors), file=sys.stderr)
+        return 1
 
-    docs = ROOT / "docs"
-    (docs / "archive").mkdir(parents=True, exist_ok=True)
-    dates = {p.stem for p in (docs / "archive").glob("*.html")}
+    history = load_history()
+    report = enrich(report, day, recent_urls(history, day))
+
+    (DOCS / "archive").mkdir(parents=True, exist_ok=True)
+    dates = {p.stem for p in (DOCS / "archive").glob("*.html")}
     if not args.sample:
-        dates.add(today.isoformat())
+        dates.add(day.isoformat())
     archive_dates = sorted(dates, reverse=True)[:14]
-    common = dict(usage=usage, history_checked=bool(history), archive_dates=archive_dates)
-    (docs / "index.html").write_text(render(report, today, **common), encoding="utf-8")
-    if not args.sample:
-        (docs / "archive" / f"{today.isoformat()}.html").write_text(
-            render(report, today, prefix="../", **common), encoding="utf-8"
-        )
+    common = dict(history_checked=bool(history), archive_dates=archive_dates)
 
+    (DOCS / "index.html").write_text(render(report, day, **common), encoding="utf-8")
     if not args.sample:
-        history = [d for d in history if d["date"] != today.isoformat()]
+        (DOCS / "archive" / f"{day.isoformat()}.html").write_text(
+            render(report, day, prefix="../", **common), encoding="utf-8"
+        )
+        history = [e for e in history if e["date"] != day.isoformat()]
         history.insert(0, {
-            "date": today.isoformat(),
-            "model": MODEL,
-            "usage": usage,
-            "cost_usd": estimate_cost(usage),
+            "date": day.isoformat(),
+            "ops": report.get("ops", {}),
             "jobs": [
                 {k: j.get(k) for k in ("company", "title", "total", "deadline_text", "url")}
                 for j in report["jobs"]
             ],
         })
-        save_history(history)
+        HISTORY.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"완료: 공고 {len(report['jobs'])}건, 추정 비용 ${estimate_cost(usage)}")
+    print(f"완료: {day} 공고 {len(report['jobs'])}건")
     return 0
 
 

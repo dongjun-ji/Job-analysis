@@ -126,7 +126,10 @@
 
   <section>
     <div class="sec-head"><span class="badge">OPS</span><h2>운영 지표</h2></div>
-    <p class="note">모델 {{ model }} · 웹 검색 {{ usage.web_search_requests }}회 · 페이지 열람 {{ usage.web_fetch_requests }}회 · 입력 {{ "{:,}".format(usage.input_tokens) }} / 출력 {{ "{:,}".format(usage.output_tokens) }} 토큰 · 추정 비용 ${{ cost }}</p>
+    <p class="note">검색 {{ ops.searches if ops.searches is defined else "-" }}회 · 원문 확인 {{ ops.fetched if ops.fetched is defined else "-" }}건 · 검토 후 제외 {{ ops.excluded | length if ops.excluded is defined else "-" }}건 · 추천 {{ r.jobs | length }}건</p>
+    {% if ops.excluded %}
+    <p class="note">제외한 공고: {{ ops.excluded | join(" / ") }}</p>
+    {% endif %}
     {% if archive_dates %}
     <p class="note">지난 리포트:
       {% for d in archive_dates %}<a href="{{ prefix }}archive/{{ d }}.html">{{ d[5:] }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
@@ -134,7 +137,7 @@
     {% endif %}
   </section>
 
-  <footer>GitHub Actions가 매일 오전 9시 전후 자동으로 만든 페이지예요. 생성 {{ generated_at }} KST</footer>
+  <footer>Claude 예약 작업이 공고를 분석하고, GitHub Actions가 매일 자동으로 만든 페이지예요. 생성 {{ generated_at }} KST</footer>
 </div>
 </body>
 </html>
