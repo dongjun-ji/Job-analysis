@@ -1,5 +1,53 @@
 [
   {
+    "date": "2026-11-21",
+    "ops": {
+      "searches": 14,
+      "fetched": 13,
+      "excluded": [
+        "리디 글로벌 자유연재 플랫폼 운영 매니저(운영 경력 3년 이상, 네이티브 수준 영어 필수)",
+        "이너트립 운영매니저 워크샵 운영(1년 계약직, 근무지 부천)",
+        "버핏서울 영업기획 매니저(경력 5년 이상)",
+        "잡플래닛 Sales Manager(B2B 영업 5년 이상)",
+        "나인투원(쏘카일레클) 운영 데이터 분석/기획 매니저(경력 3년 이상·SQL 실무 필수, 어제 추천해 오늘은 제외)",
+        "비누랩스 Operations Manager·Senior Operations Manager 리멤버 공고(표기 마감일 2026.10.17 경과, 3년 이상)",
+        "뤼튼 Content Provider(크랙)(마감된 공고)",
+        "안다르 컨텐츠 마케팅 담당자(마감, 마케팅 직무)",
+        "원티드 6건·캐치 4건·리멤버 1건·더팀스 1건(원문 페이지 열기 실패)"
+      ]
+    },
+    "jobs": [
+      {
+        "company": "나라스페이스테크놀로지",
+        "title": "[운영] 전략기획 담당자 (경력무관)",
+        "total": 79,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/341736"
+      },
+      {
+        "company": "팀스파르타",
+        "title": "B2G 사업 운영 매니저 (미래내일 일경험 사업)",
+        "total": 67,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/344877"
+      },
+      {
+        "company": "버핏서울",
+        "title": "팀버핏 운영지원 매니저",
+        "total": 59,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/341169"
+      },
+      {
+        "company": "엔라이튼",
+        "title": "운영 담당자 (주니어)",
+        "total": 49,
+        "deadline_text": "2026.12.15",
+        "url": "https://www.wanted.co.kr/wd/393206"
+      }
+    ]
+  },
+  {
     "date": "2026-11-20",
     "ops": {
       "searches": 11,
