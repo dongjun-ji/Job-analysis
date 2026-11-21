@@ -103,12 +103,40 @@ def enrich(report: dict, day: date, seen_urls: set[str]) -> dict:
 
 # ---------- 렌더링 ----------
 
-def render(report: dict, day: date, history_checked: bool, archive_dates: list[str], prefix: str = "") -> str:
+def run_stats(history: list[dict]) -> dict:
+    """리포트가 올라간 날을 세어 누적 운영 일수와 시작일을 구한다."""
+    dates = sorted({e["date"] for e in history})
+    if not dates:
+        return {"days": 0, "start": None, "start_label": "-"}
+    start = date.fromisoformat(dates[0])
+    return {"days": len(dates), "start": dates[0], "start_label": f"{start.year}.{start.month:02d}.{start.day:02d}"}
+
+
+README_START, README_END = "<!-- ops:start -->", "<!-- ops:end -->"
+
+
+def update_readme(stats: dict) -> None:
+    """README의 표시 구간 안에 누적 운영 일수를 매일 다시 쓴다."""
+    path = ROOT / "README.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    if README_START not in text or README_END not in text:
+        return
+    line = f"{stats['start_label']}부터 매일 운영 중 · 누적 {stats['days']}일"
+    head, rest = text.split(README_START, 1)
+    _, tail = rest.split(README_END, 1)
+    path.write_text(f"{head}{README_START}{line}{README_END}{tail}", encoding="utf-8")
+
+
+def render(report: dict, day: date, history_checked: bool, archive_dates: list[str],
+           stats: dict, prefix: str = "") -> str:
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=select_autoescape(["html"]))
     return env.get_template("report.html").render(
         r=report,
         date_label=f"{day.year}년 {day.month}월 {day.day}일 ({WEEKDAYS[day.weekday()]})",
         ops=report.get("ops", {}),
+        stats=stats,
         history_checked=history_checked,
         archive_dates=archive_dates,
         prefix=prefix,
@@ -144,20 +172,10 @@ def main() -> int:
         return 1
 
     history = load_history()
+    history_checked = bool([e for e in history if e["date"] != day.isoformat()])
     report = enrich(report, day, recent_urls(history, day))
 
-    (DOCS / "archive").mkdir(parents=True, exist_ok=True)
-    dates = {p.stem for p in (DOCS / "archive").glob("*.html")}
     if not args.sample:
-        dates.add(day.isoformat())
-    archive_dates = sorted(dates, reverse=True)[:14]
-    common = dict(history_checked=bool(history), archive_dates=archive_dates)
-
-    (DOCS / "index.html").write_text(render(report, day, **common), encoding="utf-8")
-    if not args.sample:
-        (DOCS / "archive" / f"{day.isoformat()}.html").write_text(
-            render(report, day, prefix="../", **common), encoding="utf-8"
-        )
         history = [e for e in history if e["date"] != day.isoformat()]
         history.insert(0, {
             "date": day.isoformat(),
@@ -167,7 +185,23 @@ def main() -> int:
                 for j in report["jobs"]
             ],
         })
+        history.sort(key=lambda e: e["date"], reverse=True)
+    stats = run_stats(history)
+
+    (DOCS / "archive").mkdir(parents=True, exist_ok=True)
+    dates = {p.stem for p in (DOCS / "archive").glob("*.html")}
+    if not args.sample:
+        dates.add(day.isoformat())
+    archive_dates = sorted(dates, reverse=True)[:14]
+    common = dict(history_checked=history_checked, archive_dates=archive_dates, stats=stats)
+
+    (DOCS / "index.html").write_text(render(report, day, **common), encoding="utf-8")
+    if not args.sample:
+        (DOCS / "archive" / f"{day.isoformat()}.html").write_text(
+            render(report, day, prefix="../", **common), encoding="utf-8"
+        )
         HISTORY.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+        update_readme(stats)
 
     print(f"완료: {day} 공고 {len(report['jobs'])}건")
     return 0

@@ -15,7 +15,7 @@
   <header class="hero">
     <div class="eyebrow">DAILY JOB BRIEF</div>
     <h1>데일리 채용 브리프</h1>
-    <div class="meta">{{ date_label }} · 검색 기준 최근 7일 공고</div>
+    <div class="meta">{{ date_label }} · 검색 기준 최근 7일 공고{% if stats.days %} · 운영 {{ stats.days }}일째{% endif %}</div>
   </header>
 
   <div class="summary">
@@ -124,7 +124,8 @@
 
   <section>
     <div class="sec-head"><span class="badge">OPS</span><h2>운영 지표</h2></div>
-    <p class="note">검색 {{ ops.searches if ops.searches is defined else "-" }}회 · 원문 확인 {{ ops.fetched if ops.fetched is defined else "-" }}건 · 검토 후 제외 {{ ops.excluded | length if ops.excluded is defined else "-" }}건 · 추천 {{ r.jobs | length }}건</p>
+    {% if stats.days %}<p class="note">{{ stats.start_label }}부터 매일 운영 중 · 누적 {{ stats.days }}일</p>{% endif %}
+    <p class="note">오늘 검색 {{ ops.searches if ops.searches is defined else "-" }}회 · 원문 확인 {{ ops.fetched if ops.fetched is defined else "-" }}건 · 검토 후 제외 {{ ops.excluded | length if ops.excluded is defined else "-" }}건 · 추천 {{ r.jobs | length }}건</p>
     {% if ops.excluded %}
     <p class="note">제외한 공고: {{ ops.excluded | join(" / ") }}</p>
     {% endif %}
