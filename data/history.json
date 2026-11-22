@@ -1,5 +1,57 @@
 [
   {
+    "date": "2026-11-22",
+    "ops": {
+      "searches": 13,
+      "fetched": 17,
+      "excluded": [
+        "비누랩스 Operations Manager·Senior Operations Manager(마감일 2026.10.17 경과, 경력 3년 이상)",
+        "원티드랩 Product Owner(경력 7년 이상)",
+        "피유엠피(씽씽) 서비스(물류 및 정비) 운영 매니저(물류 현장 경력 3년 이상, 운전면허 필수)",
+        "유니브 유니브클래스 운영 매니저(서비스 운영·CS 경력 3년 이상, 전화 상담 경험 필수)",
+        "아파트멘터리 매니저 운영·관리 담당자(리모델링·인테리어 현장 3년 이상)",
+        "헤딩써치(헤드헌팅) 플랫폼 사업기획본부장(경력 10년 이상, 팀장급)",
+        "내러티브 GA&PX Manager(3개월 계약직, 총무 경력 3년 이상)",
+        "트웰브랩스 Operations Manager(경력 7년 이상)",
+        "채널코퍼레이션 CEO Staff(경력 5~10년)",
+        "하이브 위버스 광고 비즈니스 기획(서비스 기획 5년 이상)",
+        "산림조합중앙회 산림경영지도원(마감일 10.30 경과, 직무 불일치)",
+        "나라스페이스테크놀로지 [운영] 서비스 기획자(최근 추천, 웹·백오피스 기획 경력 필수)",
+        "원티드 8건·캐치 4건·리멤버 1건·더팀스 1건(원문 페이지 열기 실패)"
+      ]
+    },
+    "jobs": [
+      {
+        "company": "나라스페이스테크놀로지",
+        "title": "[운영] 전략기획 담당자 (경력무관)",
+        "total": 79,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/341736"
+      },
+      {
+        "company": "토스랩(잔디)",
+        "title": "[잔디] Business Operations Manager",
+        "total": 60,
+        "deadline_text": "2026.12.15",
+        "url": "https://www.wanted.co.kr/wd/396548"
+      },
+      {
+        "company": "오렌지스퀘어",
+        "title": "사업 운영 매니저",
+        "total": 53,
+        "deadline_text": "채용 시 마감 (페이지 내 마감 여부 표기 확인 필요)",
+        "url": "https://career.rememberapp.co.kr/job/posting/335525"
+      },
+      {
+        "company": "케이엠파크",
+        "title": "사업운영팀 담당자",
+        "total": 46,
+        "deadline_text": "상시채용",
+        "url": "https://www.wanted.co.kr/wd/387613"
+      }
+    ]
+  },
+  {
     "date": "2026-11-21",
     "ops": {
       "searches": 14,
