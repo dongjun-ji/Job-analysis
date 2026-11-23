@@ -2,8 +2,8 @@
   {
     "date": "2026-11-23",
     "ops": {
-      "searches": 13,
-      "fetched": 21,
+      "searches": 23,
+      "fetched": 36,
       "excluded": [
         "쿠팡 카탈로그 검수 중간매니저(마감일 2026.11.13 경과, 2~5년 차·인력 관리 경험 필수)",
         "쿠팡 리테일 운영기획 매니저(경력 10년 이상)",
@@ -23,7 +23,18 @@
         "앳홈트립 여행 상품 운영 기획 매니저(마감, 3년 이상)",
         "샵라이브 HR Associate(2년 계약직, 마감)",
         "아이비커리어 잡매니저(마감된 공고)",
-        "원티드 5건·캐치 3건·사람인 1건·리멤버 4건(원문 페이지 열기 실패, 토스랩·오렌지스퀘어 재확인 실패 포함)"
+        "문토 서비스 운영·기획 매니저(마감일 2026.11.23, 공고에 마감 표시)",
+        "카카오뱅크 IT 기획 담당자(마감, 07/16)",
+        "두루두루아티스트컴퍼니 아티스트 매니지먼트 매니저(마감, 직무 불일치)",
+        "페이히어 콘텐츠 마케터(마감 표시, 직무 불일치)",
+        "헥토파이낸셜 회원제 서비스 기획(마감 표시)",
+        "오픈서베이 Operations Manager 리멤버 공고(오늘 앞선 검토에서 마감 확인)",
+        "크린토피아 O2O 서비스 기획·운영 매니저(경력 4~6년)",
+        "미소 Product Operations Manager(경력 5년 이상)",
+        "어반플레이 전략기획 담당자·리서처(공간기획·로컬비즈니스 경력 필수)",
+        "베슬에이아이 Vendor Management Manager(경력 5년 이상)",
+        "내러티브 GA&PX Manager(3개월 계약 후 전환, 총무 3년 이상)",
+        "원티드 10건·캐치 12건·사람인 1건·리멤버 6건·더팀스 1건(원문 페이지 열기 실패, 오늘 두 차례 검토 합계)"
       ]
     },
     "jobs": [
@@ -33,6 +44,13 @@
         "total": 79,
         "deadline_text": "채용 시 마감",
         "url": "https://career.rememberapp.co.kr/job/posting/341736"
+      },
+      {
+        "company": "프리윌린",
+        "title": "전략기획팀 Strategy Manager (1~3년차)",
+        "total": 62,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/327394"
       },
       {
         "company": "버핏서울",
@@ -47,6 +65,20 @@
         "total": 51,
         "deadline_text": "상시채용",
         "url": "https://www.wanted.co.kr/wd/399173"
+      },
+      {
+        "company": "나인투원(쏘카일레클)",
+        "title": "[쏘카일레클] 운영기획 매니저",
+        "total": 51,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/342023"
+      },
+      {
+        "company": "엔라이튼",
+        "title": "운영 담당자 (주니어)",
+        "total": 46,
+        "deadline_text": "2026.12.15",
+        "url": "https://www.wanted.co.kr/wd/393206"
       }
     ]
   },
