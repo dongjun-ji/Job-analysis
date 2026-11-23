@@ -23,6 +23,7 @@ KST = ZoneInfo("Asia/Seoul")
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 HISTORY_DAYS = 7
 MAX_JOBS = 6
+MIN_SCORE = 50
 SCORE_KEYS = {"experience": 40, "qualification": 30, "domain": 20, "conditions": 10}
 REQUIRED_JOB_KEYS = ["company", "title", "url", "scores", "priority"]
 
@@ -88,9 +89,17 @@ def enrich(report: dict, day: date, seen_urls: set[str]) -> dict:
             except ValueError:
                 pass
     report["jobs"].sort(key=lambda j: j.get("priority", 99))
-    # 화면에는 추천 공고를 최대 6개, TOP 3는 정확히 3개까지만 보여준다.
-    report["jobs"] = report["jobs"][:MAX_JOBS]
-    report["top3"] = report.get("top3", [])[:3]
+    # 50점 미만은 화면에서 뺀다. 남은 공고는 최대 6개, TOP 3는 남은 공고 중에서만 3개까지.
+    dropped = [j for j in report["jobs"] if j["total"] < MIN_SCORE]
+    report["jobs"] = [j for j in report["jobs"] if j["total"] >= MIN_SCORE][:MAX_JOBS]
+    for i, job in enumerate(report["jobs"], 1):
+        job["priority"] = i
+    kept = {(j["company"], j["title"]) for j in report["jobs"]}
+    report["top3"] = [t for t in report.get("top3", []) if (t.get("company"), t.get("title")) in kept][:3]
+    if dropped:
+        ops = report.setdefault("ops", {})
+        ops.setdefault("excluded", [])
+        ops["excluded"] += [f"{j['company']} {j['title']}({j['total']}점, 50점 미만)" for j in dropped]
 
     jobs = report["jobs"]
     deadlines = sorted(
