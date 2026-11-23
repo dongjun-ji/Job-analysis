@@ -22,6 +22,7 @@ DOCS = ROOT / "docs"
 KST = ZoneInfo("Asia/Seoul")
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 HISTORY_DAYS = 7
+MAX_JOBS = 6
 SCORE_KEYS = {"experience": 40, "qualification": 30, "domain": 20, "conditions": 10}
 REQUIRED_JOB_KEYS = ["company", "title", "url", "scores", "priority"]
 
@@ -87,6 +88,9 @@ def enrich(report: dict, day: date, seen_urls: set[str]) -> dict:
             except ValueError:
                 pass
     report["jobs"].sort(key=lambda j: j.get("priority", 99))
+    # 화면에는 추천 공고를 최대 6개, TOP 3는 정확히 3개까지만 보여준다.
+    report["jobs"] = report["jobs"][:MAX_JOBS]
+    report["top3"] = report.get("top3", [])[:3]
 
     jobs = report["jobs"]
     deadlines = sorted(
