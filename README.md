@@ -4,7 +4,7 @@
 
 리포트: https://dongjun-ji.github.io/Job-analysis/
 
-<!-- ops:start -->2026.11.20부터 매일 운영 중 · 누적 4일<!-- ops:end -->
+<!-- ops:start -->2026.11.20부터 매일 운영 중 · 누적 5일<!-- ops:end -->
 
 ## 왜 만들었나
 
