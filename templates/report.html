@@ -81,6 +81,7 @@
         <dt>요구 경력·자격</dt><dd>{{ j.career }} · {{ j.requirements }}</dd>
         <dt>맞는 역량</dt><dd>{{ j.matches | join(" / ") }}</dd>
         <dt>우선순위</dt><dd>{{ j.priority }}순위 · {{ j.priority_reason }}</dd>
+        {% if j.open_check %}<dt>모집 확인</dt><dd>{{ j.open_check }}</dd>{% endif %}
         <dt>원문</dt><dd><a href="{{ j.url }}">{{ j.url }}</a></dd>
       </dl>
     </div>

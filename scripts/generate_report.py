@@ -24,6 +24,7 @@ WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 HISTORY_DAYS = 7
 MAX_JOBS = 6
 MIN_SCORE = 50
+OPEN_CHECK_FROM = "2026-11-26"  # 이날부터 공고마다 모집 중 확인 문구를 필수로 받는다
 SCORE_KEYS = {"experience": 40, "qualification": 30, "domain": 20, "conditions": 10}
 REQUIRED_JOB_KEYS = ["company", "title", "url", "scores", "priority"]
 
@@ -48,9 +49,10 @@ def recent_urls(history: list[dict], day: date) -> set[str]:
 
 # ---------- 검증과 계산 ----------
 
-def validate(report: dict) -> list[str]:
+def validate(report: dict, day: date | None = None) -> list[str]:
     """AI가 만든 데이터에서 형식이 틀린 부분을 찾는다. 문제가 있으면 메시지 목록을 돌려준다."""
     errors = []
+    need_open_check = day is not None and day.isoformat() >= OPEN_CHECK_FROM
     for key in ("briefing", "jobs", "actions", "verdict"):
         if key not in report:
             errors.append(f"'{key}' 항목이 없습니다")
@@ -62,6 +64,8 @@ def validate(report: dict) -> list[str]:
             value = job.get("scores", {}).get(key)
             if not isinstance(value, (int, float)) or not 0 <= value <= limit:
                 errors.append(f"{i}번째 공고 {key} 점수가 0~{limit} 범위를 벗어났습니다: {value}")
+        if need_open_check and not str(job.get("open_check") or "").strip():
+            errors.append(f"{i}번째 공고에 'open_check'(오늘 원문에서 모집 중임을 확인한 문구)가 없습니다")
     return errors
 
 
@@ -90,15 +94,25 @@ def enrich(report: dict, day: date, seen_urls: set[str]) -> dict:
                 pass
     report["jobs"].sort(key=lambda j: j.get("priority", 99))
     # 50점 미만은 화면에서 뺀다. 남은 공고는 최대 6개, TOP 3는 남은 공고 중에서만 3개까지.
+    def expired(job: dict) -> bool:
+        iso = job.get("deadline_iso")
+        try:
+            return bool(iso) and date.fromisoformat(iso) < day
+        except ValueError:
+            return False
+
+    closed = [j for j in report["jobs"] if expired(j)]
+    report["jobs"] = [j for j in report["jobs"] if not expired(j)]
     dropped = [j for j in report["jobs"] if j["total"] < MIN_SCORE]
     report["jobs"] = [j for j in report["jobs"] if j["total"] >= MIN_SCORE][:MAX_JOBS]
     for i, job in enumerate(report["jobs"], 1):
         job["priority"] = i
     kept = {(j["company"], j["title"]) for j in report["jobs"]}
     report["top3"] = [t for t in report.get("top3", []) if (t.get("company"), t.get("title")) in kept][:3]
-    if dropped:
+    if dropped or closed:
         ops = report.setdefault("ops", {})
         ops.setdefault("excluded", [])
+        ops["excluded"] += [f"{j['company']} {j['title']}(마감일 {j['deadline_iso']} 지남)" for j in closed]
         ops["excluded"] += [f"{j['company']} {j['title']}({j['total']}점, 50점 미만)" for j in dropped]
 
     jobs = report["jobs"]
@@ -179,7 +193,7 @@ def main() -> int:
         day = date.fromisoformat(path.stem)
 
     report = json.loads(path.read_text(encoding="utf-8"))
-    errors = validate(report)
+    errors = validate(report, None if args.sample else day)
     if errors:
         print("리포트 데이터 형식 오류:\n- " + "\n- ".join(errors), file=sys.stderr)
         return 1

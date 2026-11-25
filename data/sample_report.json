@@ -28,7 +28,8 @@
         "Daily Report와 월 단위 운영 기록 관리"
       ],
       "priority": 1,
-      "priority_reason": "경력 요건이 열려 있고 마감이 가까워요."
+      "priority_reason": "경력 요건이 열려 있고 마감이 가까워요.",
+      "open_check": "지원하기 버튼 있음"
     },
     {
       "company": "예시 기업 B",
@@ -51,7 +52,8 @@
         "협력사 자료 요청을 3일 안에 정리해 전달한 경험"
       ],
       "priority": 2,
-      "priority_reason": "조건은 맞지만 기획 직무 경험이 약해요."
+      "priority_reason": "조건은 맞지만 기획 직무 경험이 약해요.",
+      "open_check": "지원하기 버튼 있음"
     }
   ],
   "top3": [
