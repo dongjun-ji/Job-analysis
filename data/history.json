@@ -1,5 +1,72 @@
 [
   {
+    "date": "2026-11-28",
+    "ops": {
+      "searches": 18,
+      "fetched": 27,
+      "excluded": [
+        "비누랩스 Operations Manager·Senior Operations Manager, 버즈빌 [Global Market] Operation Manager, 넥스트챕터 Sales Operations Manager, 오픈서베이 Operations Manager(리멤버 원문 마감된 공고 표시 또는 마감일 경과)",
+        "닥터나우 Medical Solution Business Strategy & Ops Manager, 레드블루 오퍼레이션 매니저(원티드 원문 마감된 공고 표시)",
+        "핀타에이아이 Business Operations Associate(마감일 2026.11.02 경과)",
+        "주성엔지니어링 신입 수시채용, 하츠 경영기획 담당자(마감된 공고 표시)",
+        "인앤아웃코퍼레이션 사업화 PM(계약직 6개월, 경력 5년 내외, 마감)",
+        "이너트립 운영매니저(1년 계약직, 경기 부천 근무)",
+        "플레이스앤 영업운영 매니저(1년 계약직, 경력 3~8년)",
+        "가온칩스 신입 HR 담당자(직무 불일치)",
+        "헤렌 로컬 세일즈 Account Executive(필드 세일즈 2년 이상, 직무 불일치)",
+        "버즈빌 [Game UA] Product Specialist(게임 UA·퍼포먼스 마케팅 경력 필요)",
+        "나라스페이스테크놀로지 HR Lead(경력 10년 이상)",
+        "Dfinite Project Operations Manager(원문에서 모집 중 근거 확인 실패)",
+        "버즈빌 [Frontier] Operation Manager, 나라스페이스테크놀로지 [운영] 서비스 기획자(오늘 원문 모집 중 확인했으나 6개 상한으로 제외)",
+        "원티드 7건·캐치 2건·리멤버 1건·더팀스 1건(원문 페이지 열기 실패)"
+      ]
+    },
+    "jobs": [
+      {
+        "company": "디플에이치알 (디맨드 운영사)",
+        "title": "Operations Manager",
+        "total": 73,
+        "deadline_text": "채용 시 마감",
+        "url": "https://inthiswork.com/archives/412897"
+      },
+      {
+        "company": "디써클",
+        "title": "오퍼레이션 담당자",
+        "total": 69,
+        "deadline_text": "2026.12.31",
+        "url": "https://www.wanted.co.kr/wd/398126"
+      },
+      {
+        "company": "헤렌(HERREN)",
+        "title": "공비서 B2B 운영 매니저",
+        "total": 72,
+        "deadline_text": "확인 필요 (조기 마감 가능 안내만 있음)",
+        "url": "https://inthiswork.com/archives/412181"
+      },
+      {
+        "company": "버즈빌",
+        "title": "[Revenue Product] Operation Manager (경력 무관)",
+        "total": 70,
+        "deadline_text": "확인 필요",
+        "url": "https://inthiswork.com/?p=416284"
+      },
+      {
+        "company": "팀스파르타",
+        "title": "B2G 사업 운영 매니저 (미래내일 일경험 사업)",
+        "total": 67,
+        "deadline_text": "채용 시 마감",
+        "url": "https://career.rememberapp.co.kr/job/posting/344877"
+      },
+      {
+        "company": "토스씨엑스",
+        "title": "Operations Manager (제품운영/인력운영) (인재풀)",
+        "total": 60,
+        "deadline_text": "확인 필요 (인재풀 공고)",
+        "url": "https://toss.im/career/job-detail?job_id=7868486003"
+      }
+    ]
+  },
+  {
     "date": "2026-11-27",
     "ops": {
       "searches": 18,
